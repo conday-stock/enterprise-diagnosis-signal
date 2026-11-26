@@ -59,7 +59,6 @@ triggers:
   - 工艺问题
   - 数字化问题
 license: MIT
-icon: icon.png
 permissions:
   file_read: 读取本技能自带的 references 与 assets
   file_write: 仅向用户指定目录写出深挖盲区卡与脱敏申请包
