@@ -195,7 +195,6 @@ export(pkg, out_dir)
 - `manifest.yaml`：市场发布元数据（名称、触发词、分类、许可、图标）。
 - `config.json`：线索接收端配置。第一周 `lead_form_url` 留空，只走方式 A。
 - `README.md`：客户视角使用说明。
-- `icon.png`：512×512 市场封面图。
 - `scripts/render_signal_card.py`：两区渲染器。
 - `scripts/export_application.py`：脱敏申请包导出器（仅在客户回复「约」后调用）。
 - `assets/signal_card_template.html`：深挖盲区卡模板。
