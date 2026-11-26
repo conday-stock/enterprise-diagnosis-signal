@@ -1,0 +1,725 @@
+{
+  "meta": {
+    "contract_version": "1.0.0",
+    "date": "2026-11-25",
+    "source_doc": "deep-dive-questioning-card-v0.4（内部方法论文档，已抽象入本契约）",
+    "authority": "本契约是唯一事实源；SKILL.md 与脚本不得内嵌话术或字段映射",
+    "iron_rules": [
+      "免费版不出灯色——对话层只输出叙事区+访谈区（深挖盲区卡），灯色留到深度诊断",
+      "灯色若将来启用，只来自 run_pipeline()，追问不产生灯色",
+      "已验证事实：仅用追问字段出灯色会误判（cost_quality橙→黄、finance绿→黄、talent/org变not_activated）；完整判定需15-20字段，与轻量对话≤10问冲突，故免费版不判灯",
+      "落点字段必须在 FIELD_Q 中存在，不存在则不得标为判定输入",
+      "主假设证据等级为 C 时，叙事区标注证据不足，不产生强判断",
+      "对外话术只用个人资历版，不得宣称工具已在多家企业验证交付"
+    ],
+    "positioning_change_20261125": "由'免费版含六维灯色'改为'深挖盲区卡'：只给关键盲区+需求钩子+操作指引；灯色与完整判定移至深度诊断（付费）",
+    "ai_generation_authorization": {
+      "principle": "AI 主导对话与叙事生成；Skill 提供方法论、职能分类、红线与成品话术模板，不替代 AI 推理",
+      "allowed": [
+        "基于客户回答，按五环链生成有内容的叙事判断",
+        "用自然语言把客户碎片回答串成盲区判断",
+        "在红线内做常识性推理和表达润色"
+      ],
+      "forbidden": [
+        "给出红橙黄绿灯色或任何维度判定",
+        "臆造客户未提供的数字、事实或案例",
+        "证据等级为 C 时下强判断",
+        "宣称本工具已在多家企业验证交付"
+      ],
+      "iron_rule_revision": "原铁律'话术来自契约、不得临场编写诊断性结论'已废止，改为'按方法论生成、受红线约束'"
+    }
+  },
+  "field_bindings": {
+    "note": "血缘题号见 b3_lineage.FIELD_Q；对外显示题号见 b4_render._Q_DISPLAY_OVERRIDE。质量类字段血缘记 Q6，对外显示 Q7。",
+    "questionnaire_default_only_rule": "标记 questionnaire_default_only=true 的字段（5家问卷全为默认值0/False，问卷未真正采集）禁止表述为'你的情况是X'等事实；只能由 Skill 追问获得，答不出按证据等级 C 处理。2026-11-25 阶段6验证发现。",
+    "quality_loss_ratio": {
+      "lineage_q": "Q6",
+      "display_q": "Q7"
+    },
+    "quality_loss_dev_ratio": {
+      "lineage_q": "Q6",
+      "display_q": "Q7",
+      "questionnaire_default_only": true
+    },
+    "quality_assessment_misaligned": {
+      "lineage_q": "Q6",
+      "display_q": "Q7",
+      "questionnaire_default_only": true
+    },
+    "delivery_rate": {
+      "lineage_q": "Q6",
+      "display_q": "Q6"
+    },
+    "key_post_backup_level": {
+      "lineage_q": "Q3",
+      "display_q": "Q3"
+    },
+    "tech_turnover": {
+      "lineage_q": "Q3",
+      "display_q": "Q3"
+    },
+    "tech_capability_insufficient": {
+      "lineage_q": "Q3",
+      "display_q": "Q3",
+      "questionnaire_default_only": true
+    },
+    "boss_time_items": {
+      "lineage_q": "Q12",
+      "display_q": "Q12"
+    },
+    "firefighting_freq_per_week": {
+      "lineage_q": "Q7",
+      "display_q": "Q7",
+      "questionnaire_default_only": true
+    },
+    "top3_customer_ratio": {
+      "lineage_q": "Q4",
+      "display_q": "Q4"
+    },
+    "annual_price_cut": {
+      "lineage_q": "Q7",
+      "display_q": "Q7"
+    },
+    "gross_margin_low": {
+      "lineage_q": "Q2",
+      "display_q": "Q7"
+    },
+    "cash_flow_fragile": {
+      "lineage_q": "Q11",
+      "display_q": "Q11",
+      "questionnaire_default_only": true
+    },
+    "budget_cash_flow_test_done": {
+      "lineage_q": "Q11",
+      "display_q": "Q11"
+    },
+    "rd_ratio": {
+      "lineage_q": "Q8",
+      "display_q": "Q8"
+    }
+  },
+  "dimension_fields": {
+    "source": "b3_lineage.py SIXDIM_FIELDS L81-92",
+    "cost_quality": [
+      "annual_price_cut",
+      "gross_margin_low",
+      "gross_margin_high",
+      "quality_loss_ratio",
+      "quality_loss_dev_ratio",
+      "quality_penalty_occurred",
+      "quality_assessment_misaligned"
+    ],
+    "talent": [
+      "tech_turnover",
+      "key_post_backup_level",
+      "tech_capability_insufficient"
+    ],
+    "quality_delivery": [
+      "quality_assessment_misaligned",
+      "tech_capability_insufficient",
+      "quality_loss_ratio",
+      "gross_margin_low",
+      "gross_margin_high"
+    ],
+    "customer": [
+      "top3_customer_ratio",
+      "largest_customer_ratio",
+      "cash_flow_fragile",
+      "budget_cash_flow_test_done",
+      "market_share",
+      "product_type"
+    ],
+    "finance": [
+      "delivery_rate"
+    ],
+    "org": [
+      "key_post_backup_level",
+      "firefighting_freq_per_week",
+      "boss_time_items"
+    ]
+  },
+  "evidence_grades": {
+    "F": "客户给出具体数字或明确事实，落点字段可填",
+    "I": "客户做选择性判断（如'更像第二种'），落点字段部分可填",
+    "A": "客户自述感觉、无数据，只进叙事区",
+    "C": "答'不清楚/没算过'，段5视为未完成，不出灯色",
+    "usage": "内部规则：AI 自己判断客户信息可靠程度，决定是否下强判断。禁止向客户展示字母等级，禁止让客户选择等级，禁止在卡片里出现 F/I/A/C 或'证据等级'字样。"
+  },
+  "exit_rules": {
+    "R1": "一个为什么指向多于一个原因时，把分歧作为竞争解释素材，不沿一条硬走",
+    "R2": "答案指向企业能改变的机制时，对话可提前停，但要出灯色仍需完成段5",
+    "R3": "反证答'不像'则主假设置信上调；答'像'则必须展开该情况",
+    "R4": "主假设证据等级为 C 或段5未完成，只出叙事区，不出灯色，等同 B 档"
+  },
+  "zones": {
+    "叙事区": "来源主假设/竞争解释/反证追问 + 接口信号，禁止灯色；输出关键盲区与证据等级",
+    "访谈区": "需求钩子+操作指引：说明为何需要深度诊断、深度诊断会查什么、如何获取；禁止灯色",
+    "判定区": "已移除——免费版不出灯色；保留此键仅为兼容旧契约消费者，值恒为 disabled"
+  },
+  "diagnosis_hook": {
+    "principle": "钩子不是推销话术，是把'你看到的现象'连接到'需要完整证据链才能定论'的那条断层",
+    "three_parts": [
+      "【AI现场生成，不套固定话】根据客户刚才的具体描述，如实回答：你现在讲的是<用客户自己的话点出他说的现象>；这些现象本身是结果，真正的成因往往落在几个环节的接口上——单点信息看不到那条链。必须紧扣客户描述，禁止套用'质量损失/人员流失/增长变慢'这类通用词。",
+      "深度诊断会用现象→证据→根因→影响→建议的五环链，用我们开发成熟并验证后的 AI 智能分析工具把 15–20 项关键信息逐一核对，再用一次 60 分钟访谈把接口上的因果串起来。它给的不是一句'重视质量'，而是哪一环在驱动、改哪一环最有效。",
+      "如果你想往下走，回我一个「约」。这只是表达兴趣，不产生任何费用；我会问你一句是想先了解还是直接约，由你定。"
+    ],
+    "forbidden": [
+      "本工具已在多家企业验证",
+      "已交付深度诊断",
+      "你的问题是X红灯（免费版不得判灯）"
+    ],
+    "part1_rule": "三段式第1段必须由 AI 基于客户原话现场生成，禁止输出模板占位或通用词；第2、3段为固定成品话术，直接取用原文。"
+  },
+  "functions": [
+    {
+      "id": "A1",
+      "function": "质量",
+      "tier": "A",
+      "trigger": [
+        "售后质量问题多",
+        "客户总投诉质量",
+        "质量成本压不住",
+        "质量",
+        "质量问题",
+        "返工",
+        "退货",
+        "客户投诉",
+        "三包",
+        "质量损失",
+        "售后"
+      ],
+      "main_hypothesis": "质量损失没被单独计量，老板无法判断它吃掉多少利润",
+      "segments": [
+        {
+          "stage": 1,
+          "name": "主假设",
+          "question": "质量这块我见过两种：一种是退货返工没单独算过账，一种是算了但没人拿它做决策。你们更像哪种？",
+          "field": "quality_loss_ratio",
+          "zone": "判定区",
+          "track_evidence_grade": true
+        },
+        {
+          "stage": 2,
+          "name": "竞争解释",
+          "question": "如果账是清楚的、问题还在，最可能卡在哪——金额算不清，还是算清了没人用？",
+          "field": "quality_assessment_misaligned",
+          "zone": "判定区"
+        },
+        {
+          "stage": 3,
+          "name": "反证",
+          "question": "我见过一种企业，损失算得清楚但数字没进考核，售后照样反复。你们有没有这种感觉？",
+          "field": null,
+          "zone": "叙事区"
+        },
+        {
+          "stage": 4,
+          "name": "接口",
+          "question": "质量判不合格但交付很急时，谁拍板放行？",
+          "field": null,
+          "zone": "访谈区"
+        },
+        {
+          "stage": 5,
+          "name": "落点确认",
+          "question": "开发验证阶段的质量损失，你们有没有单独拆过这个数？（若答没拆过或不清楚→证据等级C，不产生强判断；若答拆过→追问大约占质量损失的几成）",
+          "field": "quality_loss_dev_ratio",
+          "zone": "判定区",
+          "binary": true,
+          "questionnaire_default_only": true,
+          "if_unknown": "C"
+        }
+      ],
+      "hit_dimensions": [
+        "cost_quality",
+        "quality_delivery",
+        "finance"
+      ],
+      "exposure": "没计量→盲区是计量本身；已计量但问题仍在→盲区在计量之后的使用",
+      "timing_note": "零公里PPM数周—数月见效，三包滞后6–18个月，别用下个月索赔数字判断改善是否有效",
+      "hook": "让步接收无对应字段，列为访谈第一问"
+    },
+    {
+      "id": "A2",
+      "function": "人力",
+      "tier": "A",
+      "trigger": [
+        "关键岗位没人",
+        "流失率大",
+        "招不到人",
+        "人力",
+        "员工流失",
+        "骨干流失",
+        "招人",
+        "招聘",
+        "后备",
+        "接班人",
+        "留不住人"
+      ],
+      "main_hypothesis": "关键岗位后备断层，组织透明度低到老板无法判断风险",
+      "segments": [
+        {
+          "stage": 1,
+          "name": "主假设",
+          "question": "关键岗位明天有人走，接班人是明确的还是要临时找？",
+          "field": "key_post_backup_level",
+          "zone": "判定区",
+          "binary": true,
+          "track_evidence_grade": true
+        },
+        {
+          "stage": 2,
+          "name": "竞争解释",
+          "question": "流失集中在技术销售这类抢手的，还是任何岗位都留不住？",
+          "field": "tech_turnover",
+          "zone": "判定区"
+        },
+        {
+          "stage": 3,
+          "name": "反证",
+          "question": "我见过一种企业，关键岗位走了业务没塌，因为活早被分掉了；也见过一走就停摆的。你们更像哪种？",
+          "field": null,
+          "zone": "叙事区"
+        },
+        {
+          "stage": 4,
+          "name": "接口",
+          "question": "走的人的活谁接——另一个人兼，还是您自己顶？",
+          "field": "boss_time_items",
+          "zone": "判定区",
+          "proxy_note": "同时可填 firefighting_freq_per_week"
+        },
+        {
+          "stage": 5,
+          "name": "落点确认",
+          "question": "有没有出现过技术能力跟不上的具体信号——是技术部自己提的，还是质量/交付端抱怨过来的？（若答没出现过或不清楚→证据等级C，不产生强判断）",
+          "field": "tech_capability_insufficient",
+          "zone": "判定区",
+          "binary": true,
+          "questionnaire_default_only": true,
+          "if_unknown": "C"
+        }
+      ],
+      "hit_dimensions": [
+        "talent",
+        "org"
+      ],
+      "exposure": "流失不最危险，不清楚有没有后备才是——组织透明度已低到无法判断风险",
+      "hook": "接口答案若为老板自己顶，属组织对个人的隐性依赖，访谈展开"
+    },
+    {
+      "id": "A3",
+      "function": "财务",
+      "tier": "A",
+      "trigger": [
+        "现金流紧",
+        "客户压价",
+        "毛利越来越薄",
+        "怕被砍单",
+        "财务",
+        "应收账款",
+        "账期",
+        "年降",
+        "砍单",
+        "毛利",
+        "利润薄",
+        "现金流"
+      ],
+      "main_hypothesis": "财务压力可能来自年降吃毛利、账期拉长或客户集中三种之一——先看企业最像哪种，不预设是客户结构（2026-11-25 阶段6验证：5家中仅2家前三大占比过半，原假设3/5不成立）",
+      "segments": [
+        {
+          "stage": 1,
+          "name": "主假设",
+          "question": "我见过三种现金紧：一种是年降把毛利吃掉了，一种是账期被拉长钱压在客户那，一种是客户太集中没有议价权。你们最像哪一种？",
+          "field": "top3_customer_ratio",
+          "zone": "判定区",
+          "binary": true,
+          "track_evidence_grade": true,
+          "branch_fields": {
+            "年降": "annual_price_cut",
+            "账期": "cash_flow_fragile",
+            "客户集中": "top3_customer_ratio"
+          }
+        },
+        {
+          "stage": 2,
+          "name": "竞争解释",
+          "question": "如果第一种不像，那你账上压着的钱更像压在货上（库存占款），还是压在客户账期上？",
+          "field": "annual_price_cut",
+          "zone": "判定区",
+          "proxy_note": "或 cash_flow_fragile"
+        },
+        {
+          "stage": 3,
+          "name": "反证",
+          "question": "我见过现金流紧是库存占款，也见过是客户太集中。你们账上压着的钱，更像压在货上还是客户账期上？",
+          "field": null,
+          "zone": "叙事区"
+        },
+        {
+          "stage": 4,
+          "name": "接口",
+          "question": "客户压价时销售让了价，成本压力最后传到谁——采购、质量还是交付？",
+          "field": "annual_price_cut",
+          "zone": "判定区+访谈区"
+        },
+        {
+          "stage": 5,
+          "name": "落点确认",
+          "question": "最大客户砍单一半的压力测试，是做过还是没做过？",
+          "field": "budget_cash_flow_test_done",
+          "zone": "判定区",
+          "binary": true
+        }
+      ],
+      "hit_dimensions": [
+        "cost_quality",
+        "quality_delivery",
+        "customer"
+      ],
+      "exposure": "现金流紧张往往不是财务问题，是客户结构问题",
+      "hook": "压力传到哪一站，哪里就是管理薄弱点，访谈展开"
+    },
+    {
+      "id": "A4",
+      "function": "技术",
+      "tier": "A",
+      "trigger": [
+        "技术跟不上",
+        "开发慢",
+        "研发救火",
+        "技术",
+        "开发",
+        "工程师",
+        "研发",
+        "技术能力"
+      ],
+      "main_hypothesis": "技术问题不在投入，在能干活的人留不住",
+      "segments": [
+        {
+          "stage": 1,
+          "name": "主假设",
+          "question": "技术岗流失是被挖走、培养不出来、还是培养出来留不住？",
+          "field": "tech_turnover",
+          "zone": "判定区",
+          "track_evidence_grade": true
+        },
+        {
+          "stage": 2,
+          "name": "竞争解释",
+          "question": "如果流失不严重，开发慢更可能是能力缺口还是技术路线没定？",
+          "field": "tech_capability_insufficient",
+          "zone": "判定区"
+        },
+        {
+          "stage": 3,
+          "name": "反证",
+          "question": "我见过技术团队很稳但开发慢的，慢在跨部门协同；也见过人一走就断的。你们更像哪种？",
+          "field": null,
+          "zone": "叙事区"
+        },
+        {
+          "stage": 4,
+          "name": "接口",
+          "question": "开发慢时，质量端和交付端是提前知道还是最后才知道？",
+          "field": null,
+          "zone": "访谈区"
+        },
+        {
+          "stage": 5,
+          "name": "落点确认",
+          "question": "研发投入占比是在增加没效果，还是在收缩？",
+          "field": "rd_ratio",
+          "zone": "叙事区",
+          "no_hit": true
+        }
+      ],
+      "hit_dimensions": [
+        "talent",
+        "quality_delivery"
+      ],
+      "exposure": "技术开发慢可能不是投入不够，而是能干活的人留不住",
+      "note": "段5 rd_ratio 不命中六维，本卡判定靠段1/2，段5只作背景"
+    },
+    {
+      "id": "B1",
+      "function": "战略",
+      "tier": "B",
+      "trigger": [
+        "方向不清",
+        "扩张还是收缩",
+        "行业下行",
+        "战略",
+        "扩张",
+        "收缩",
+        "战略问题"
+      ],
+      "hook": "战略迷茫在数据上是四种状态：缺钱、没信心、没方向、方向有但资源不匹配。你给的信息能看出趋势和投资信号，但分不清是哪一种——分错了越努力越远。",
+      "action": "如果你想知道自己更像哪一种，回我一个「约」，我把访谈入口发你。"
+    },
+    {
+      "id": "B2",
+      "function": "生产",
+      "tier": "B",
+      "trigger": [
+        "交付总延误",
+        "排产乱",
+        "产能不够",
+        "生产",
+        "交付",
+        "排产",
+        "产能",
+        "交期",
+        "生产问题"
+      ],
+      "hook": "交付准时率我能给灯色，但延期归因（产能/供应链/排产）现有数据定不了——它往往不在生产部内部，在采购和质量接口上。",
+      "action": "如果你想知道自己更像哪一种，回我一个「约」，我把访谈入口发你。"
+    },
+    {
+      "id": "B3",
+      "function": "IT/数字化",
+      "tier": "B",
+      "trigger": [
+        "上了ERP没效果",
+        "数据不准",
+        "系统不通",
+        "IT",
+        "数字化",
+        "ERP",
+        "MES"
+      ],
+      "hook": "数据不准通常不是系统问题，是系统之间没打通。上了 ERP 有没有效，六维灯色看不出来——访谈能判断它卡在哪一环。",
+      "action": "如果你想知道自己更像哪一种，回我一个「约」，我把访谈入口发你。"
+    },
+    {
+      "id": "B4",
+      "function": "市场",
+      "tier": "B",
+      "trigger": [
+        "两年没增长",
+        "新客户开发不动",
+        "转型",
+        "市场",
+        "新项目",
+        "客户开发",
+        "增长",
+        "份额",
+        "市场问题"
+      ],
+      "promoted_from": "A5",
+      "hook": "增长停滞的判定落点只有一个：客户集中度。但增量从哪来、行业在不在涨、新客户体量够不够——这些现有数据看不了。先看集中度能不能给你一个初步信号，剩下的靠访谈串起来。",
+      "action": "如果你想知道自己更像哪一种，回我一个「约」，我把访谈入口发你。"
+    },
+    {
+      "id": "C1",
+      "function": "采购",
+      "tier": "C",
+      "trigger": [
+        "供应商总出问题",
+        "原材料涨价",
+        "采购成本压不住",
+        "采购",
+        "供应商",
+        "原材料",
+        "降本",
+        "采购问题",
+        "采购成本"
+      ],
+      "hook": "采购成本压不住，通常不是采购部本身的问题。最可能两个方向：年降压力没传到供应商，采购在内部被挤；或自制率太低、关键物料没替代方案。现有数据判断不了是哪个，一次访谈能把它和毛利、客户结构串起来。",
+      "action": "如果你想知道这个职能问题到底和哪个环节有关，回我一个「约」，我把访谈入口发你。"
+    },
+    {
+      "id": "C2",
+      "function": "物流",
+      "tier": "C",
+      "trigger": [
+        "物流成本高",
+        "库存积压",
+        "供应链不稳",
+        "物流",
+        "库存",
+        "供应链",
+        "仓储",
+        "运输",
+        "物流问题"
+      ],
+      "hook": "物流成本高往往不是物流部的问题，是客户结构（小批量多频次）或交付模式导致的。现有数据看不了，访谈能把订单结构和物流成本串起来。",
+      "action": "如果你想知道这个职能问题到底和哪个环节有关，回我一个「约」，我把访谈入口发你。"
+    },
+    {
+      "id": "C3",
+      "function": "设备",
+      "tier": "C",
+      "trigger": [
+        "设备老化",
+        "OEE上不去",
+        "设备故障多",
+        "设备",
+        "OEE",
+        "停机",
+        "故障",
+        "点检",
+        "设备问题"
+      ],
+      "hook": "设备问题常和制造人工结构绑在一起——是设备老化还是人不会用，定稿里就标了需访谈。六维灯色对设备没有直接信号。",
+      "action": "如果你想知道这个职能问题到底和哪个环节有关，回我一个「约」，我把访谈入口发你。"
+    },
+    {
+      "id": "C4",
+      "function": "工艺",
+      "tier": "C",
+      "trigger": [
+        "工艺不稳定",
+        "良率上不去",
+        "新产品导入慢",
+        "工艺",
+        "良率",
+        "新产品导入",
+        "制程",
+        "工艺问题"
+      ],
+      "hook": "工艺不稳常常是技术能力不足在制造端的显形。如果追问确认是技术能力问题，能走技术卡给灯色；否则现有数据判不了。",
+      "action": "如果你想知道这个职能问题到底和哪个环节有关，回我一个「约」，我把访谈入口发你。"
+    },
+    {
+      "id": "G",
+      "function": "通用模糊兜底",
+      "tier": "router",
+      "trigger": [
+        "生意越来越难做",
+        "最近感觉不太对",
+        "说不清哪里出问题",
+        "管理问题",
+        "经营问题",
+        "企业问题",
+        "老板",
+        "诊断",
+        "生意难做"
+      ],
+      "router": "轮廓三问：主营产品与客户类型(product_type/customer_type)→营收利润(profit)→最影响生意的一件事(pain_categories)→归入12职能重新分流",
+      "no_signal_card": true,
+      "note": "本卡只做路由，不出正式信号卡；信息不足时输出六维灯色违反不臆造纪律",
+      "router_steps": [
+        "问主营产品与客户类型",
+        "问营收利润区间",
+        "问最影响生意的一件事",
+        "按三问答案重新路由到 A/B/C 真实职能卡，再按该卡流程继续"
+      ]
+    }
+  ],
+  "outreach": {
+    "external_phrase": "本人行业多年实战管理经验，曾为多家企业进行过类似咨询服务。",
+    "forbidden_phrases": [
+      "已在 N 家企业验证",
+      "真实客户案例",
+      "已交付深度诊断",
+      "本工具已被多家企业验证交付"
+    ],
+    "action_phrase_note": "约=付费意愿问句触发预约入口，第一周不做支付、不自动留资",
+    "author_name": "企业管理顾问老周",
+    "contact": {
+      "channel": "QQ",
+      "account": "1904765320",
+      "when": "客户回约并选B（预约）后告知"
+    },
+    "contact_phrase": "你可以加我 QQ 1904765320，把企业情况和想解决的问题发我，我们约个 60 分钟访谈。"
+  },
+  "verification": {
+    "samples": 5,
+    "per_sample": "至少2张A档卡 + 1张B/C档卡",
+    "primary_metric": "段5落点可映射率，低于60%需改问法为二选一",
+    "other_metrics": [
+      "主假设证据等级分布",
+      "主假设命中率",
+      "竞争解释触发率",
+      "反证回答分布",
+      "接口暴露信号"
+    ]
+  },
+  "routing_rule": {
+    "principle": "职能词与衍生词只在内层路由表使用，不进 manifest.triggers 裸词层，避免高频通用词误触发整个技能",
+    "priority": "A档(质量/人力/财务/技术) > B档(战略/生产/IT/市场) > C档(采购/物流/设备/工艺) > G兜底",
+    "multi_hit": "同一句话命中多职能时，先问'哪一个最影响你现在的生意'，只取第一个"
+  },
+  "generic_question_framework": {
+    "applies_to": "凡 functions[].segments 缺失的卡（B1-B4/C1-C4），AI 按此框架 + 该卡 hook 现场生成追问",
+    "principle": "用 hook 里点明的盲区当主假设，用假设分享式追问，一次一问，总问数不超过 6",
+    "stages": [
+      {
+        "stage": 1,
+        "name": "主假设",
+        "rule": "从 hook 提炼一句'我见过两种/三种…你们更像哪种'，不给结论"
+      },
+      {
+        "stage": 2,
+        "name": "竞争解释",
+        "rule": "给出与主假设不同的另一种机制，二选一"
+      },
+      {
+        "stage": 3,
+        "name": "反证",
+        "rule": "'我见过一种情况是…你们有没有这种感觉'，识别场景式"
+      },
+      {
+        "stage": 4,
+        "name": "接口",
+        "rule": "问'谁让步/谁接手/压力传到哪个职能'，落到叙事或访谈钩子"
+      },
+      {
+        "stage": 5,
+        "name": "落点确认",
+        "rule": "二选一补齐可判定信息；答不清按 C 级，不下强判断"
+      }
+    ],
+    "no_card_cases": "G 卡 no_signal_card=true，只做轮廓三问后重新路由，不出盲区卡"
+  },
+  "customer_language": {
+    "principle": "所有客户可见文本禁止出现内部术语；客户是老板，不懂诊断产品的行话",
+    "banned_visible_terms": {
+      "灯色": "风险等级/判定结果",
+      "红/橙/黄/绿灯": "高/中/低风险",
+      "证据等级": "信息可靠程度",
+      "F/I/A/C": "（不显示字母，直接说'你给了具体数字'/'你不太确定'）",
+      "判定区/叙事区/访谈区": "（不显示分区名，用自然小标题）",
+      "五环链": "从现象一路查到根因和影响的完整路径",
+      "字段白名单": "（不显示，内部处理）",
+      "lead_form_url/config.json": "（不显示，内部处理）",
+      "申请包": "一份问题摘要",
+      "免费版/付费深度诊断": "初步分析 / 完整诊断",
+      "不出灯色/不下结论": "（不主动声明限制，客户没问就不提）"
+    },
+    "opening_prompt": "请描述企业的现状及遇到的问题，简要清晰。信息越充分，分析越准确。",
+    "no_banner": "对话开场禁止输出任何工具横幅、版本号、'思路1'、'AI主导'、'调试'等内部信息；客户只应看到 WorkBuddy 在正常帮他分析问题。",
+    "no_internal_declaration": "禁止向客户声明'这属于X职能问题'、'这张卡不给灯色'、'只找盲区'等内部流程口径；直接开始分析。",
+    "emotion_filter": "客户情绪化/攻击性回答（如'你很傻'、'说了三遍了'）不得原样进入卡片，改为提炼实质内容；若无实质内容则跳过该段，不展示。"
+  },
+  "multi_answer_rule": {
+    "trigger": "客户对二选一/三选一问题回答'都有/都存在/三种都是/不确定/不是这样'等非单选答案",
+    "forbidden": "严禁重复原问题或机械进入下一段预设话术（会让客户觉得'你很傻'）",
+    "handling": [
+      "立即承认并承接：'三种都有说明这不是单一原因，而是几件事叠在一起'",
+      "从客户已说的几种里，挑一个最可操作的追问聚焦：'我们先看其中对你现金流影响最快的那个——'",
+      "若客户再次表达不满，停止追问，直接基于已有信息出卡并说'信息够了，我先给你初步分析'"
+    ],
+    "escalation": "客户明确表达不耐烦/攻击时，进入提前结束，不再追问，直接生成卡片"
+  },
+  "multi_domain_rule": {
+    "trigger": "客户描述同时涉及战略/财务/市场/退出困境等多个职能",
+    "handling": "不向客户宣布'这属于X问题'；在内部按影响最快的一条主线追问，但在卡片里体现问题的综合性，点明多因叠加",
+    "forbidden": "禁止为了路由把综合问题硬贴上单一职能标签并告知客户"
+  },
+  "question_generation_rule": {
+    "principle": "每一轮追问必须由 AI 基于客户上一轮的具体回答现场生成，紧扣其内容，禁止输出框架规则原文、hook 原文或方括号占位符给客户",
+    "forbidden_visible": [
+      "[AI按通用框架现场生成]",
+      "本卡hook：",
+      "我见过两种...你们更像哪种（模板）",
+      "段1/段2/段3 编号"
+    ],
+    "must_do": [
+      "引用客户上一轮的原话或关键词，让客户知道你在听",
+      "从客户回答里挑出最有信息量的点继续深挖",
+      "用老板听得懂的生意语言，不用诊断术语"
+    ]
+  }
+}

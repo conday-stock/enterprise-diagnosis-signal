@@ -1,0 +1,12 @@
+{
+  "_note": "线索接收端配置。第一周使用现成云表单；表单地址由开发者填入 lead_form_url 后生效。未配置时技能只走方式 A（客户自行发送申请包），不发起任何网络提交。",
+  "lead_form_url": "",
+  "lead_form_fields": {
+    "company_alias": "company_alias",
+    "function": "function_id",
+    "application_json": "application_json",
+    "consent": "consent"
+  },
+  "require_explicit_consent": true,
+  "no_hardcoded_secrets": true
+}

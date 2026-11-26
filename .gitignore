@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 本地产物与快照
+output/
+dist/
+internal_archive/
+_pre_*/
+*.zip
+
+# 编辑器/系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 本地配置（含可能的个人信息）
+.env
+*.local
